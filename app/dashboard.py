@@ -355,63 +355,65 @@ elif page == "🔮 Prediction":
             # Classification — calibrated to Kitwe's GHI distribution
             # Thresholds derived from 6-year NASA POWER dataset percentiles
             # 33rd percentile = 5.3325, 67th percentile = 6.1238
-        if prediction < 5.3325:
-           level = "Low"
-           icon = "🌧️"
-           desc = "Below average irradiance — cloudy or rainy conditions likely"
-           border_color = "#f87171"
-        elif prediction < 6.1238:
-           level = "Moderate"
-           icon = "⛅"
-           desc = "Average irradiance — typical Kitwe conditions"
-           border_color = "#fbbf24"
-        else:
-           level = "High"
-           icon = "🌞"
-           desc = "Above average irradiance — clear sunny conditions"
-           border_color = "#4ade80"
+            if prediction < 5.3325:
+                level = "Low"
+                icon = "🌧️"
+                desc = "Below average irradiance — cloudy or rainy conditions likely"
+                border_color = "#f87171"
+            elif prediction < 6.1238:
+                level = "Moderate"
+                icon = "⛅"
+                desc = "Average irradiance — typical Kitwe conditions"
+                border_color = "#fbbf24"
+            else:
+                level = "High"
+                icon = "🌞"
+                desc = "Above average irradiance — clear sunny conditions"
+                border_color = "#4ade80"
 
-    st.markdown(f"""
-            <div style='background:#1c2128; border:2px solid {border_color};
-                        border-radius:16px; padding:30px; text-align:center; margin:10px 0;'>
-                <p style='color:#8b949e; margin:0; font-size:0.85rem'>Predicted GHI</p>
-                <h1 style='color:#f6c90e; font-size:3.5rem; margin:10px 0;'>
-                    {prediction:.4f}
-                </h1>
-                <p style='color:#8b949e; margin:0; font-size:0.85rem'>kWh/m²/day</p>
-                <hr style='border-color:#30363d; margin:15px 0;'>
-                <h3 style='color:{border_color}; margin:0;'>{icon} {level} Solar Irradiance</h3>
-                <p style='color:#8b949e; margin:5px 0 0 0; font-size:0.85rem'>{desc}</p>
-            </div>
+            st.markdown(f"""
+                <div style='background:#1c2128; border:2px solid {border_color};
+                            border-radius:16px; padding:30px; text-align:center; margin:10px 0;'>
+                    <p style='color:#8b949e; margin:0; font-size:0.85rem'>Predicted GHI</p>
+                    <h1 style='color:#f6c90e; font-size:3.5rem; margin:10px 0;'>
+                        {prediction:.4f}
+                    </h1>
+                    <p style='color:#8b949e; margin:0; font-size:0.85rem'>kWh/m²/day</p>
+                    <hr style='border-color:#30363d; margin:15px 0;'>
+                    <h3 style='color:{border_color}; margin:0;'>{icon} {level} Solar Irradiance</h3>
+                    <p style='color:#8b949e; margin:5px 0 0 0; font-size:0.85rem'>{desc}</p>
+                </div>
             """, unsafe_allow_html=True)
 
             # Input summary chart
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<div class='section-header'><h3 style='color:#ffffff; margin:0'>Input Summary</h3></div>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div class='section-header'><h3 style='color:#ffffff; margin:0'>Input Summary</h3></div>", unsafe_allow_html=True)
 
-    fig, ax = plt.subplots(figsize=(6, 3))
-    fig.patch.set_facecolor('#1c2128')
-    ax.set_facecolor('#1c2128')
+            fig, ax = plt.subplots(figsize=(6, 3))
+            fig.patch.set_facecolor('#1c2128')
+            ax.set_facecolor('#1c2128')
 
-    variables = ['Temperature\n(°C)', 'Humidity\n(%)', 'Cloud Cover\n(%)']
-    values = [t2m, rh2m, cloud_amt]
-    colors = ['#f87171', '#60a5fa', '#94a3b8']
-    bars = ax.bar(variables, values, color=colors, edgecolor='#30363d', linewidth=0.5)
+            variables = ['Temperature\n(°C)', 'Humidity\n(%)', 'Cloud Cover\n(%)']
+            values = [t2m, rh2m, cloud_amt]
+            colors = ['#f87171', '#60a5fa', '#94a3b8']
+            bars = ax.bar(variables, values, color=colors, edgecolor='#30363d', linewidth=0.5)
 
-    for bar, val in zip(bars, values):
+            for bar, val in zip(bars, values):
                 ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
-                       f'{val:.1f}', ha='center', va='bottom',
-                       color='white', fontsize=9, fontweight='bold')
+                        f'{val:.1f}', ha='center', va='bottom',
+                        color='white', fontsize=9, fontweight='bold')
 
-    ax.set_ylim(0, 110)
-    ax.tick_params(colors='#8b949e')
-    ax.spines['bottom'].set_color('#30363d')
-    ax.spines['left'].set_color('#30363d')
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.yaxis.label.set_color('#8b949e')
-    plt.tight_layout()
-    st.pyplot(fig)
+            ax.set_ylim(0, 110)
+            ax.tick_params(colors='#8b949e')
+            ax.spines['bottom'].set_color('#30363d')
+            ax.spines['left'].set_color('#30363d')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.yaxis.label.set_color('#8b949e')
+            plt.tight_layout()
+            st.pyplot(fig)
+        else:
+            st.info("Click the button to generate a prediction.")
 else:
     st.markdown("""
             <div style='background:#1c2128; border:1px dashed #30363d;
