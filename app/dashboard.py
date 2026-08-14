@@ -181,14 +181,14 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.markdown("""
-    <p style='color: #8b949e; font-size: 0.7rem; text-align: center;'>
-    CS 301 Group Project<br>
-    Copperbelt University<br>
-    School of ICT — 2025
-    </p>
-    """, unsafe_allow_html=True)
+    #st.markdown("---")
+    #st.markdown("""
+    #<p style='color: #8b949e; font-size: 0.7rem; text-align: center;'>
+    #CS 301 Group Project<br>
+    #Copperbelt University<br>
+    #School of ICT — 2025
+    #</p>
+    #""", unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
 # PAGE 1 — HOME
