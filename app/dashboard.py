@@ -6,7 +6,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 from datetime import date
-from api import weather_for_date
+
+try:
+    from app.api import weather_for_date
+except ModuleNotFoundError:
+    from api import weather_for_date
 
 # ── Page config ──────────────────────────────────────────────
 st.set_page_config(
