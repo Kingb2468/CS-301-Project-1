@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+from datetime import date
+from api import weather_for_date
 
 # ── Page config ──────────────────────────────────────────────
 st.set_page_config(
@@ -173,7 +175,7 @@ with st.sidebar:
     <div style='padding: 10px; background: #1c2128; border-radius: 8px;'>
         <p style='color: #8b949e; font-size: 0.75rem; margin: 0;'>
         📍 <b style='color: #c9d1d9'>Location:</b> Kitwe, Zambia<br>
-        📅 <b style='color: #c9d1d9'>Data:</b> 2020 – 2025<br>
+        📅 <b style='color: #c9d1d9'>Data:</b> 2020 – present (live)<br>
         🛰️ <b style='color: #c9d1d9'>Source:</b> NASA POWER API<br>
         🤖 <b style='color: #c9d1d9'>Model:</b> Multiple Linear Regression<br>
         📐 <b style='color: #c9d1d9'>R² Score:</b> 0.5647
@@ -313,6 +315,41 @@ elif page == "🔮 Prediction":
     """, unsafe_allow_html=True)
 
     st.markdown("---")
+
+    with st.expander("🌦️ Daily Weather API", expanded=True):
+        selected_date = st.date_input(
+            "Select a date",
+            value=date.today(),
+            min_value=date(1981, 1, 1),
+            max_value=date.today(),
+        )
+
+        try:
+            daily_weather = weather_for_date(selected_date.isoformat())
+            daily_variables = daily_weather["variables"]
+            weather_col1, weather_col2, weather_col3 = st.columns(3)
+
+            with weather_col1:
+                st.metric(
+                    "Temperature",
+                    f'{daily_variables["temperature"]["value"]:.2f} °C',
+                    daily_variables["temperature"]["condition"],
+                )
+            with weather_col2:
+                st.metric(
+                    "Relative Humidity",
+                    f'{daily_variables["relative_humidity"]["value"]:.2f}%',
+                    daily_variables["relative_humidity"]["condition"],
+                )
+            with weather_col3:
+                st.metric(
+                    "Cloud Cover",
+                    f'{daily_variables["cloud_cover"]["value"]:.2f}%',
+                    daily_variables["cloud_cover"]["condition"],
+                )
+            st.caption(f"API: /api/weather?date={selected_date.isoformat()}")
+        except (KeyError, LookupError, ValueError) as error:
+            st.error(f"Weather data unavailable: {error}")
 
     col_inputs, col_result = st.columns([1, 1], gap="large")
 
