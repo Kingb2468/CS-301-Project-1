@@ -1,17 +1,15 @@
 """Small read-only API for daily Kitwe weather conditions."""
 
 import json
-import os
-from datetime import date, datetime, time, timezone
+from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import urlopen
 
 
-OPENWEATHER_CURRENT_URL = "https://api.openweathermap.org/data/2.5/weather"
-OPENWEATHER_HISTORY_URL = "https://api.openweathermap.org/data/3.0/onecall/timemachine"
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+NASA_POWER_URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
+NASA_POWER_PARAMETERS = "ALLSKY_SFC_SW_DWN,RH2M,T2M,CLOUD_AMT"
 KITWE_LATITUDE = -12.8024
 KITWE_LONGITUDE = 28.2132
 
@@ -68,59 +66,45 @@ def build_weather_response(normalized_date, temperature, humidity, cloud_cover, 
     }
 
 
-def openweather_request(url, query):
-    if not OPENWEATHER_API_KEY:
-        raise LookupError(
-            "Set OPENWEATHER_API_KEY before requesting OpenWeather conditions"
-        )
+def fetch_from_nasa_power(normalized_date):
+    date_for_api = normalized_date.replace("-", "")
+    query = urlencode(
+        {
+            "parameters": NASA_POWER_PARAMETERS,
+            "community": "RE",
+            "longitude": KITWE_LONGITUDE,
+            "latitude": KITWE_LATITUDE,
+            "start": date_for_api,
+            "end": date_for_api,
+            "format": "JSON",
+        }
+    )
 
-    query["appid"] = OPENWEATHER_API_KEY
-    query["units"] = "metric"
     try:
-        with urlopen(f"{url}?{urlencode(query)}", timeout=15) as response:
-            return json.loads(response.read().decode("utf-8"))
+        with urlopen(f"{NASA_POWER_URL}?{query}", timeout=15) as response:
+            payload = json.loads(response.read().decode("utf-8"))
     except HTTPError as error:
-        if error.code in (401, 403):
-            raise LookupError("OpenWeather rejected the API key") from error
-        if error.code == 404:
-            raise LookupError("OpenWeather has no record for that date") from error
-        raise LookupError("OpenWeather could not provide weather data") from error
+        raise LookupError("NASA POWER could not provide weather data") from error
     except (URLError, TimeoutError) as error:
-        raise LookupError("OpenWeather could not be reached") from error
+        raise LookupError("NASA POWER could not be reached") from error
 
+    parameters = payload.get("properties", {}).get("parameter", {})
+    try:
+        temperature = float(parameters["T2M"][date_for_api])
+        humidity = float(parameters["RH2M"][date_for_api])
+        cloud_cover = float(parameters["CLOUD_AMT"][date_for_api])
+    except (KeyError, TypeError, ValueError) as error:
+        raise LookupError("NASA POWER has no record for that date") from error
 
-def fetch_from_openweather(normalized_date):
-    requested_date = date.fromisoformat(normalized_date)
-
-    if requested_date == date.today():
-        payload = openweather_request(
-            OPENWEATHER_CURRENT_URL,
-            {"lat": KITWE_LATITUDE, "lon": KITWE_LONGITUDE},
-        )
-        temperature = float(payload["main"]["temp"])
-        humidity = float(payload["main"]["humidity"])
-        cloud_cover = float(payload["clouds"]["all"])
-    else:
-        timestamp = int(
-            datetime.combine(requested_date, time(12), tzinfo=timezone.utc).timestamp()
-        )
-        payload = openweather_request(
-            OPENWEATHER_HISTORY_URL,
-            {"lat": KITWE_LATITUDE, "lon": KITWE_LONGITUDE, "dt": timestamp},
-        )
-        observations = payload.get("data", [])
-        if not observations:
-            raise LookupError("OpenWeather has no record for that date")
-        temperature = sum(float(item["temp"]) for item in observations) / len(observations)
-        humidity = sum(float(item["humidity"]) for item in observations) / len(observations)
-        cloud_cover = sum(float(item["clouds"]) for item in observations) / len(observations)
+    if any(value <= -999 for value in (temperature, humidity, cloud_cover)):
+        raise LookupError("NASA POWER has no record for that date")
 
     return build_weather_response(
         normalized_date,
         temperature,
         humidity,
         cloud_cover,
-        "OpenWeather API",
+        "NASA POWER API",
     )
 
 
@@ -134,7 +118,7 @@ def weather_for_date(requested_date):
     if parsed_date > date.today():
         raise ValueError("Weather data is not available for a future date")
 
-    return fetch_from_openweather(normalized_date)
+    return fetch_from_nasa_power(normalized_date)
 
 
 class WeatherAPIHandler(BaseHTTPRequestHandler):
@@ -150,7 +134,7 @@ class WeatherAPIHandler(BaseHTTPRequestHandler):
         request = urlparse(self.path)
 
         if request.path == "/api/health":
-            self.send_json({"status": "ok", "provider": "OpenWeather API"})
+            self.send_json({"status": "ok", "provider": "NASA POWER API"})
             return
 
         if request.path != "/api/weather":

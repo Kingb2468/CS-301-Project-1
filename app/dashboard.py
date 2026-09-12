@@ -176,7 +176,7 @@ with st.sidebar:
         <p style='color: #8b949e; font-size: 0.75rem; margin: 0;'>
         📍 <b style='color: #c9d1d9'>Location:</b> Kitwe, Zambia<br>
         📅 <b style='color: #c9d1d9'>Data:</b> 2020 – present (live)<br>
-        🛰️ <b style='color: #c9d1d9'>Source:</b> OpenWeather API<br>
+        🛰️ <b style='color: #c9d1d9'>Source:</b> NASA POWER API<br>
         🤖 <b style='color: #c9d1d9'>Model:</b> Multiple Linear Regression<br>
         📐 <b style='color: #c9d1d9'>R² Score:</b> 0.5647
         </p>
